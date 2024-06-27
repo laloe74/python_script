@@ -14,5 +14,5 @@
 3. 填写股票代码，具体参考第三方库 [efinance](https://github.com/Micro-sheep/efinance)
 ```
 pip install efinance
-python3 TeleShare.py
+python3 testock.py
 ```
