@@ -1,7 +1,9 @@
 # 
 # 将本地诗歌网页的HTML文件批量转换成Markdown格式
-# pip install html2markdown beautifulsoup4
+# 将待转换HTML放入桌面文件夹「from」
 #
+# pip install html2markdown beautifulsoup4
+# python3 ~/Desktop/h2m.py
 
 import glob
 import html2markdown
