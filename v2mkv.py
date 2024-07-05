@@ -43,6 +43,21 @@ def read_log():
                 processed_files.add(line.strip())
     return processed_files
 
+def get_failed_files_from_log():
+    failed_files = set()
+    if os.path.exists(log_file_path):
+        with open(log_file_path, 'r') as log_file:
+            in_failed_section = False
+            for line in log_file:
+                line = line.strip()
+                if line == "## 失败信息":
+                    in_failed_section = True
+                elif line.startswith("##") and in_failed_section:
+                    in_failed_section = False
+                elif in_failed_section and line:
+                    failed_files.add(line)
+    return failed_files
+
 def write_log_section(title, content_list):
     with open(log_file_path, 'a') as log_file:
         log_file.write(f"\n## {title}\n")
@@ -75,96 +90,111 @@ def convert_videos(from_folder, to_folder):
     no_processing_files = []
     processed_set = read_log()
     success_files = list(processed_set)
+    failed_files_from_log = get_failed_files_from_log()
     success_count = 0
     fail_count = 0
     skip_count = 0
+
+    files_to_process = failed_files_from_log if failed_files_from_log else set()
+    if not files_to_process:
+        for root, dirs, files in os.walk(from_folder):
+            for file in files:
+                file_extension = os.path.splitext(file)[1].lower()
+                if file_extension in supported_formats:
+                    files_to_process.add(os.path.join(root, file))
 
     time_pattern = re.compile(r'^\d+:\d+:\d+\.\d+$')
 
     start_time = time.time()
 
-    for root, dirs, files in os.walk(from_folder):
-        for file in files:
-            processed_files += 1
-            file_extension = os.path.splitext(file)[1].lower()
-            
-            if file == '.DS_Store':
-                continue
-            
-            input_path = os.path.join(root, file)
-            relative_path = os.path.relpath(root, from_folder)
-            output_dir = os.path.join(to_folder, relative_path)
-            os.makedirs(output_dir, exist_ok=True)
-            
-            output_file = os.path.splitext(file)[0] + '.mp4'
-            output_path = os.path.join(output_dir, output_file)
-            
-            if file_extension == '.mp4':
-                shutil.copy2(input_path, output_path)
+    for input_path in files_to_process:
+        processed_files += 1
+        file = os.path.basename(input_path)
+        root = os.path.dirname(input_path)
+        file_extension = os.path.splitext(file)[1].lower()
+
+        if file == '.DS_Store':
+            continue
+
+        relative_path = os.path.relpath(root, from_folder)
+        output_dir = os.path.join(to_folder, relative_path)
+        os.makedirs(output_dir, exist_ok=True)
+
+        output_file = os.path.splitext(file)[0] + '.mp4'
+        output_path = os.path.join(output_dir, output_file)
+
+        if file_extension == '.mp4':
+            shutil.copy2(input_path, output_path)
+            no_processing_files.append(file)
+            skip_count += 1
+            print(f"\r正在处理: {processed_files}/{total_files}/{error_files} -- 跳过MP4文件: {file}")
+            continue
+
+        if file_extension in supported_formats:
+            if file in processed_set:
                 no_processing_files.append(file)
                 skip_count += 1
-                print(f"\r正在处理: {processed_files}/{total_files}/{error_files} -- 跳过MP4文件: {file}")
+                print(f"\r正在处理: {processed_files}/{total_files}/{error_files} -- 跳过已处理文件: {file}")
                 continue
-            
-            if file_extension in supported_formats:
-                if file in processed_set:
-                    no_processing_files.append(file)
-                    skip_count += 1
-                    print(f"\r正在处理: {processed_files}/{total_files}/{error_files} -- 跳过已处理文件: {file}")
-                    continue
-                
-                try:
-                    process = subprocess.Popen(
-                        ['ffmpeg', '-i', input_path, '-c:v', 'copy', '-c:a', 'copy', output_path],
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.STDOUT,
-                        universal_newlines=True
-                    )
-                    
-                    duration = None
-                    for line in process.stdout:
-                        if "Duration" in line:
-                            duration_str = line.split("Duration:")[1].split(",")[0].strip()
-                            h, m, s = map(float, duration_str.split(':'))
-                            duration = h * 3600 + m * 60 + s
-                        
-                        if "time=" in line:
-                            ffmpeg_output = parse_ffmpeg_output(line)
-                            time_str = ffmpeg_output.get('time', '0:00:00.00')
-                            if time_pattern.match(time_str):
-                                h, m, s = map(float, time_str.split(':'))
-                                time_in_seconds = h * 3600 + m * 60 + s
-                                
-                                if duration:
-                                    progress = (time_in_seconds / duration) * 100
-                                    progress_bar = '|' + '█' * int(progress // 2) + ' ' * (50 - int(progress // 2)) + '|'
-                                    elapsed_time = time.time() - start_time
-                                    elapsed_hours = int(elapsed_time // 3600)
-                                    elapsed_minutes = int((elapsed_time % 3600) // 60)
-                                    elapsed_seconds = int(elapsed_time % 60)
-                                    elapsed_str = f"{elapsed_hours}H/{elapsed_minutes}M/{elapsed_seconds}S"
-                                    print(f"\r正在处理: {processed_files}/{total_files}/{error_files} {int(progress)}% {progress_bar} -- {file} ({elapsed_str})", end='')
-                    
-                    process.wait()
-                    if process.returncode == 0:
-                        success_files.append(file)
-                        success_count += 1
-                    else:
-                        failed_files_list.append(file)
-                        fail_count += 1
-                        print(f"\n转换失败: {input_path}")
-                    
-                except subprocess.CalledProcessError as e:
+
+            try:
+                # 对WMV文件进行重新编码
+                if file_extension == '.wmv':
+                    ffmpeg_command = ['ffmpeg', '-i', input_path, '-c:v', 'libx264', '-c:a', 'aac', '-strict', 'experimental', output_path]
+                else:
+                    ffmpeg_command = ['ffmpeg', '-i', input_path, '-c:v', 'copy', '-c:a', 'copy', output_path]
+
+                process = subprocess.Popen(
+                    ffmpeg_command,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    universal_newlines=True
+                )
+
+                duration = None
+                for line in process.stdout:
+                    if "Duration" in line:
+                        duration_str = line.split("Duration:")[1].split(",")[0].strip()
+                        h, m, s = map(float, duration_str.split(':'))
+                        duration = h * 3600 + m * 60 + s
+
+                    if "time=" in line:
+                        ffmpeg_output = parse_ffmpeg_output(line)
+                        time_str = ffmpeg_output.get('time', '0:00:00.00')
+                        if time_pattern.match(time_str):
+                            h, m, s = map(float, time_str.split(':'))
+                            time_in_seconds = h * 3600 + m * 60 + s
+
+                            if duration:
+                                progress = (time_in_seconds / duration) * 100
+                                progress_bar = '|' + '█' * int(progress // 2) + ' ' * (50 - int(progress // 2)) + '|'
+                                elapsed_time = time.time() - start_time
+                                elapsed_hours = int(elapsed_time // 3600)
+                                elapsed_minutes = int((elapsed_time % 3600) // 60)
+                                elapsed_seconds = int(elapsed_time % 60)
+                                elapsed_str = f"{elapsed_hours}H/{elapsed_minutes}M/{elapsed_seconds}S"
+                                print(f"\r正在处理: {processed_files}/{total_files}/{error_files} {int(progress)}% {progress_bar} -- {file} ({elapsed_str})", end='')
+
+                process.wait()
+                if process.returncode == 0:
+                    success_files.append(file)
+                    success_count += 1
+                else:
                     failed_files_list.append(file)
                     fail_count += 1
                     print(f"\n转换失败: {input_path}")
-                    print(e.stderr.decode())
-                
-                print()  # 换行以显示下一个文件的进度
-            else:
-                unsupported_files.append(file)
-                error_files += 1
-                print(f"\r正在处理: {processed_files}/{total_files}/{error_files} -- 文件格式不受支持: {file_extension} 文件: {file}")
+
+            except subprocess.CalledProcessError as e:
+                failed_files_list.append(file)
+                fail_count += 1
+                print(f"\n转换失败: {input_path}")
+                print(e.stderr.decode())
+
+            print()  # 换行以显示下一个文件的进度
+        else:
+            unsupported_files.append(file)
+            error_files += 1
+            print(f"\r正在处理: {processed_files}/{total_files}/{error_files} -- 文件格式不受支持: {file_extension} 文件: {file}")
 
     end_time = time.time()
     total_time = end_time - start_time
@@ -175,11 +205,11 @@ def convert_videos(from_folder, to_folder):
     print(f"本次运行成功次数：{success_count}")
     print(f"本次运行失败次数：{fail_count}")
     print(f"本次运行跳过次数：{skip_count}")
-    print(f"本次运行总时间：{total_time:.2f}秒")
+    print(f"本次运行总时间：{elapsed_str}")
 
 from_folder = os.path.expanduser('~/Desktop/from')
 to_folder = os.path.expanduser('~/Desktop/to')
 
 convert_videos(from_folder, to_folder)
 
-print("\n视频转换完成！")
+print('\n视频转换完成！')
