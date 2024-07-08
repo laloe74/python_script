@@ -11,11 +11,12 @@ from datetime import datetime
 ####################
 #参数设置
 
-# 编码方式
-# 「1」：默认全自动，较快，体积x2                                           [对比时间：1M    测试大小/原大小：87MB/41.3MB] 
-# 「2」：重新解码编码[轻微压缩]，较慢，体积x3 [libx264 acc -crf 18]           [对比时间：1M16s 测试大小/原大小：145.7MB/41.3MB]
-# 「3」：重新解码编码[无损]，超慢，体积x30   [libx264 flac -crf 0]            [对比时间：1M25s 测试大小/原大小：1.53G/41.3MB]
-# 「4」：流复制[无损]，超快，体积x1         [但某些平台不支持，打开视频是黑的]     [对比时间：1s    测试大小/原大小：41.4MB/41.3MB]
+# 编码方式 
+# 「hevc_videotoolbox」为macOS h.265 硬编码，不支持硬解码
+# 「1」：默认全自动，较快，体积x2           [hevc_videotoolbox]                     [对比时间：1M    测试大小/原大小：87MB/41.3MB] 
+# 「2」：重新解码编码[轻微压缩]，较慢，体积x3 [hevc_videotoolbox acc -crf 18]         [对比时间：1M16s 测试大小/原大小：145.7MB/41.3MB]
+# 「3」：重新解码编码[无损]，超慢，体积x30   [hevc_videotoolbox flac -crf 0]          [对比时间：1M25s 测试大小/原大小：1.53G/41.3MB]
+# 「4」：流复制[无损]，超快，体积x1         [但某些平台不支持，打开视频是黑的]             [对比时间：1s    测试大小/原大小：41.4MB/41.3MB]
 # 修改后 command+s 手动保存再执行。
 FFmpeg = 1
 
@@ -81,11 +82,11 @@ skip_count = 0
 def convert_video(input_path, output_path):
     try:
         if FFmpeg == 1:
-            command = ['ffmpeg', '-i', input_path, output_path]
+            command = ['ffmpeg', '-i', input_path, '-c:v', 'hevc_videotoolbox', output_path]
         elif FFmpeg == 2:
-            command = ['ffmpeg', '-i', input_path, '-c:v', 'libx264', '-crf', '18', '-c:a', 'aac', output_path]
+            command = ['ffmpeg', '-i', input_path, '-c:v', 'hevc_videotoolbox', '-crf', '18', '-c:a', 'aac', output_path]
         elif FFmpeg == 3:
-            command = ['ffmpeg', '-i', input_path, '-c:v', 'libx264', '-crf', '0', '-c:a', 'flac', output_path]
+            command = ['ffmpeg', '-i', input_path, '-c:v', 'hevc_videotoolbox', '-crf', '0', '-c:a', 'flac', output_path]
         elif FFmpeg == 4:
              command = ['ffmpeg', '-i', input_path, '-c', 'copy', output_path]
 
@@ -106,7 +107,7 @@ def convert_video(input_path, output_path):
                     bar = f"[{'█' * int(progress // 5)}{' ' * (20 - int(progress // 5))}]"
                     elapsed_time = format_time(time.time() - start_time)
                     filename = os.path.basename(input_path)
-                    display_name = f'{filename[:20]}...{os.path.splitext(filename)[1]}'
+                    display_name = f'{filename[:20]}{os.path.splitext(filename)[1]}'
                     print(f"\r运行中[{elapsed_time}]: {success_count}/{failure_count}/{skip_count}/{total_files} {progress}% {bar} -- {display_name}", end='', flush=True)
         process.wait()
         if process.returncode != 0:
