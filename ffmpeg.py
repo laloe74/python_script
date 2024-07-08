@@ -11,14 +11,14 @@ from datetime import datetime
 ####################
 #参数设置
 
-# 编码方式
+# 模式选择
+# 「1」：默认全自动     [hevc_videotoolbox ]                   [对比时间：22s 测试大小/原大小：80.6MB/41.3MB] 
+# 「2」：重新编解码     [hevc_videotoolbox acc -crf 18]        [对比时间：22s 测试大小/原大小：80.6MB/41.3MB]
+# 「3」：重新编解码     [hevc_videotoolbox flac -crf 0]        [对比时间：22s 测试大小/原大小：107.4G/41.3MB]
+# 「4」：流复制         [但某些平台不支持，打开视频是黑的]          [对比时间：01s 测试大小/原大小：41.4MB/41.3MB]
 # 「hevc_videotoolbox」为macOS h.265 硬编码，不支持硬解码
-# 「1」：默认全自动，较快，体积x2           [hevc_videotoolbox]                     [对比时间：1M    测试大小/原大小：87MB/41.3MB] 
-# 「2」：重新解码编码[轻微压缩]，较慢，体积x3 [hevc_videotoolbox acc -crf 18]         [对比时间：1M16s 测试大小/原大小：145.7MB/41.3MB]
-# 「3」：重新解码编码[无损]，超慢，体积x30   [hevc_videotoolbox flac -crf 0]          [对比时间：1M25s 测试大小/原大小：1.53G/41.3MB]
-# 「4」：流复制[无损]，超快，体积x1         [但某些平台不支持，打开视频是黑的]             [对比时间：1s    测试大小/原大小：41.4MB/41.3MB]
 # 修改后 command+s 手动保存再执行。
-FFmpeg = 2
+FFmpeg = 1
 
 # 目标视频格式
 target_ext = ".mp4"
@@ -35,8 +35,8 @@ source_ext = [
 desktop = os.path.join(os.path.expanduser('~'), 'Desktop')
 from_folder = os.path.join(desktop, 'from')
 start_time = time.time()
-current_time = datetime.now().strftime("%H:%M:%S")
-to_folder = os.path.join(desktop, f'to--{current_time}')
+current_time = datetime.now().strftime("%H-%M-%S")
+to_folder = os.path.join(desktop, f'Down[{FFmpeg}]{current_time}')
 
 ####################
 
@@ -44,7 +44,7 @@ if not os.path.exists(to_folder):
     os.makedirs(to_folder)
 
 def create_log():
-    log_path = os.path.join(desktop, f'log--{current_time}.txt')
+    log_path = os.path.join(desktop, f'Log[{FFmpeg}]{current_time}.txt')
     with open(log_path, 'w') as log_file:
         log_file.write('## 本次运行信息\n成功：0\n失败：0\n跳过：0\n总数：0\n总时间：00H:00M:00S\n\n')
         log_file.write('## 成功转换的视频名称\n')
@@ -132,7 +132,7 @@ def process_videos():
             output_dir = os.path.join(to_folder, relative_path)
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
-            output_path = os.path.join(output_dir, os.path.splitext(file)[0] + target_ext)
+            output_path = os.path.join(output_dir, f"[{FFmpeg}]" + os.path.splitext(file)[0] + target_ext)
             processed_files += 1
 
             if os.path.splitext(file)[-1] == target_ext:
@@ -170,4 +170,4 @@ with open(log_path, 'r') as log_file:
     basic_info = content[1:6]
     print("\n\n" + "".join(basic_info))
 
-print("处理完成，详情请在桌面查看日志[log_小时/分钟/秒]。")
+print(f"处理完成，详情请在桌面查看日志文件-> Log[{FFmpeg}]{current_time}.txt")
