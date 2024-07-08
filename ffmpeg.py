@@ -83,9 +83,9 @@ def convert_video(input_path, output_path):
         if FFmpeg == 1:
             command = ['ffmpeg', '-i', input_path, '-c', 'copy', output_path]
         elif FFmpeg == 2:
-             command = ['ffmpeg', '-i', input_path, '-c:v', 'hevc_videotoolbox', output_path]
+            command = ['ffmpeg', '-i', input_path, '-c:v', 'hevc_videotoolbox', output_path]
         elif FFmpeg == 3:
-             command = ['ffmpeg', '-i', input_path, '-c:v', 'libx265', '-crf', '28', '-preset', 'ultrafast', '-c:a', 'aac', '-b:a', '128k', output_path]
+            command = ['ffmpeg', '-i', input_path, '-c:v', 'libx265', '-crf', '28', '-preset', 'ultrafast', '-c:a', 'aac', '-b:a', '128k', output_path]
         elif FFmpeg == 4:
             command = ['ffmpeg', '-i', input_path, '-minrate', '964K', '-maxrate', '3856K', '-bufsize', '2000K', output_path]
         elif FFmpeg == 5:
