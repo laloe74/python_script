@@ -1,6 +1,6 @@
 # macOS桌面创建「from」文件夹，待转换视频拖进去。
 # pip install ffmpeg-python
-# python video.py
+# python ffmpeg.py
 
 import os
 import shutil

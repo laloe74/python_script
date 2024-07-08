@@ -2,7 +2,7 @@
 
 ---
 
-### video.py
+### ffmpeg.py
 将桌面「from」文件夹里的所有视频转换成指定格式
 
 ### h2m.py
