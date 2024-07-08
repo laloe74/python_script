@@ -8,22 +8,17 @@ import subprocess
 import time
 from datetime import datetime
 
-####################
-#参数设置
 
 # 模式选择
-# 「1」：默认全自动     [hevc_videotoolbox ]                   [对比时间：22s 测试大小/原大小：80.6MB/41.3MB] 
-# 「2」：重新编解码     [hevc_videotoolbox acc -crf 18]        [对比时间：22s 测试大小/原大小：80.6MB/41.3MB]
-# 「3」：重新编解码     [hevc_videotoolbox flac -crf 0]        [对比时间：22s 测试大小/原大小：107.4G/41.3MB]
-# 「4」：流复制         [但某些平台不支持，打开视频是黑的]          [对比时间：01s 测试大小/原大小：41.4MB/41.3MB]
-# 「hevc_videotoolbox」为macOS h.265 硬编码，不支持硬解码
-# 修改后 command+s 手动保存再执行。
+# [1]：硬解                                [对比时间：22s 测试大小/原大小：80.6MB/41.3MB] 
+# [2]：软解[-crf28 -preset ultrafast]      [对比时间：44s 测试大小/原大小：25.4MB/41.3MB]
+# [3]：流复制[秒转换，但兼容性不好]            [对比时间：01s 测试大小/原大小：41.4MB/41.3MB]
 FFmpeg = 1
 
-# 目标视频格式
+# 目标格式
 target_ext = ".mp4"
 
-# FFmpeg支持的原视频格式
+# 原格式[FFmpeg]
 source_ext = [
     '.3g2', '.3gp', '.amv', '.asf', '.avi', '.drc', '.f4a', '.f4b', '.f4p', '.f4v',
     '.flv', '.gif', '.gifv', '.m2v', '.m3u8', '.m4p', '.m4v', '.mkv', '.mng', '.mov',
@@ -31,14 +26,14 @@ source_ext = [
     '.qt', '.rm', '.rmvb', '.roq', '.svi', '.ts', '.vob', '.webm', '.wmv', '.yuv'
 ]
 
-# Mac 桌面文件夹「from」和「to」路径
-desktop = os.path.join(os.path.expanduser('~'), 'Desktop')
-from_folder = os.path.join(desktop, 'from')
+# 时间格式
 start_time = time.time()
 current_time = datetime.now().strftime("%H-%M-%S")
+# Mac路径
+desktop = os.path.join(os.path.expanduser('~'), 'Desktop')
+from_folder = os.path.join(desktop, 'from')
 to_folder = os.path.join(desktop, f'Down[{FFmpeg}]{current_time}')
 
-####################
 
 if not os.path.exists(to_folder):
     os.makedirs(to_folder)
@@ -80,14 +75,12 @@ failure_count = 0
 skip_count = 0
 
 def convert_video(input_path, output_path):
-    try:
+    try:   
         if FFmpeg == 1:
             command = ['ffmpeg', '-i', input_path, '-c:v', 'hevc_videotoolbox', output_path]
         elif FFmpeg == 2:
-            command = ['ffmpeg', '-i', input_path, '-c:v', 'hevc_videotoolbox', '-crf', '18', '-c:a', 'aac', output_path]
+            command = ['ffmpeg', '-i', input_path, '-c:v', 'libx265', '-crf', '28', '-preset', 'ultrafast', '-c:a', 'aac', '-b:a', '128k', output_path]
         elif FFmpeg == 3:
-            command = ['ffmpeg', '-i', input_path, '-c:v', 'hevc_videotoolbox', '-crf', '0', '-c:a', 'flac', output_path]
-        elif FFmpeg == 4:
              command = ['ffmpeg', '-i', input_path, '-c', 'copy', output_path]
 
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
