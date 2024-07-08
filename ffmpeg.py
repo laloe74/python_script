@@ -17,7 +17,7 @@ from datetime import datetime
 # [5]：改变分辨率[默认1080P]
 # [6]：提取音频
 # [7]：裁剪视频
-FFmpeg = 1
+FFmpeg = 2
 
 # 目标格式
 target_ext = ".mp4"
@@ -36,7 +36,7 @@ current_time = datetime.now().strftime("%H-%M-%S")
 # Mac路径
 desktop = os.path.join(os.path.expanduser('~'), 'Desktop')
 from_folder = os.path.join(desktop, 'from')
-to_folder = os.path.join(desktop, f'Down[{FFmpeg}]{current_time}')
+to_folder = os.path.join(desktop, f'File[{FFmpeg}]{current_time}')
 
 
 if not os.path.exists(to_folder):
@@ -114,7 +114,7 @@ def convert_video(input_path, output_path):
                     elapsed_time = format_time(time.time() - start_time)
                     filename = os.path.basename(input_path)
                     display_name = f'{os.path.splitext(filename)[0][:20]}..{os.path.splitext(filename)[1]}'
-                    print(f"\r运行中[{elapsed_time}]: {success_count}/{failure_count}/{skip_count}/{total_files} {progress}% {bar} -- {display_name}", end='', flush=True)
+                    print(f"\r运行中[{elapsed_time}]: {success_count}/{failure_count}/{skip_count}/{total_files} {progress}% {bar} -- {display_name}", end='\n', flush=True)
         process.wait()
         if process.returncode != 0:
             raise subprocess.CalledProcessError(process.returncode, command)
@@ -145,7 +145,7 @@ def process_videos():
                 shutil.copy(input_path, output_path)
                 skip_count += 1
                 log_append_section(log_path, '跳过转换的视频名称', file)
-                print(f"\r跳过[{format_time(time.time() - start_time)}]: {success_count}/{failure_count}/{skip_count}/{total_files} 0% |        | -- {file[:20]}...{os.path.splitext(file)[1]}", end='', flush=True)
+                print(f"\r跳过[{format_time(time.time() - start_time)}]: {success_count}/{failure_count}/{skip_count}/{total_files} 0% |        | -- {os.path.splitext(file)[0][:20]}..{os.path.splitext(file)[1]}", end='', flush=True)
                 continue
             
             result = convert_video(input_path, output_path)
@@ -160,7 +160,7 @@ def process_videos():
             
             progress = processed_files / total_files * 100
             bar = f"[{'█' * int(progress // 5)}{' ' * (20 - int(progress // 5))}]"
-            print(f"\r运行中[{format_time(time.time() - start_time)}]: {success_count}/{failure_count}/{skip_count}/{total_files} {int(progress)}% {bar} -- {file[:20]}...{os.path.splitext(file)[1]}", end='', flush=True)
+            print(f"\r运行中[{format_time(time.time() - start_time)}]: {success_count}/{failure_count}/{skip_count}/{total_files} {int(progress)}% {bar} -- {os.path.splitext(file)[0][:20]}..{os.path.splitext(file)[1]}", end='', flush=True)
 
             # 实时更新日志
             log_update(log_path, success_count, failure_count, skip_count, total_files, format_time(time.time() - start_time))
