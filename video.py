@@ -12,13 +12,15 @@ from datetime import datetime
 #参数设置
 
 # 编码方式
-# 「1」：直接复制音视频流重新封装，快，无损，推荐。
-# 「2」：「1」失败时选择「2」，重新解码编码，慢，默认：-crf 18 有轻微压缩，可手动修改为0，无压缩。
+# 「1」：默认全自动，较快，体积较大                                [对比时间：1M    测试大小/原大小：87MB/41.3MB] 
+# 「2」：重新解码编码[轻微压缩]，较慢，体积大。 libx264 acc -crf 18  [对比时间：1M16s 测试大小/原大小：145.7MB/41.3MB]
+# 「3」：重新解码编码[无损]，超慢，体积超级大。  libx264 flac -crf 0 [对比时间：1M25s 测试大小/原大小：1.53G/41.3MB]
+# 「4」：流复制[无损]，超快，体积小，但某些平台不支持，打开视频是黑的。  [对比时间：1s    测试大小/原大小：41.4MB/41.3MB]
 # 修改后 command+s 手动保存再执行。
 FFmpeg = 1
 
 # 目标视频格式
-target_ext = ".mp4"  
+target_ext = ".mp4"
 
 # FFmpeg支持的原视频格式
 source_ext = [
@@ -79,10 +81,14 @@ skip_count = 0
 def convert_video(input_path, output_path):
     try:
         if FFmpeg == 1:
-            command = ['ffmpeg', '-i', input_path, '-c', 'copy', output_path]
+            command = ['ffmpeg', '-i', input_path, output_path]
         elif FFmpeg == 2:
             command = ['ffmpeg', '-i', input_path, '-c:v', 'libx264', '-crf', '18', '-c:a', 'aac', output_path]
-            
+        elif FFmpeg == 3:
+            command = ['ffmpeg', '-i', input_path, '-c:v', 'libx264', '-crf', '0', '-c:a', 'flac', output_path]
+        elif FFmpeg == 4:
+             command = ['ffmpeg', '-i', input_path, '-c', 'copy', output_path]
+
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         duration = None
         for line in process.stderr:
