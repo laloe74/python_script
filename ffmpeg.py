@@ -10,9 +10,13 @@ from datetime import datetime
 
 
 # 模式选择
-# [1]：硬解                                [对比时间：22s 测试大小/原大小：80.6MB/41.3MB] 
-# [2]：软解[-crf28 -preset ultrafast]      [对比时间：44s 测试大小/原大小：25.4MB/41.3MB]
-# [3]：流复制[秒转换，但兼容性不好]            [对比时间：01s 测试大小/原大小：41.4MB/41.3MB]
+# [1]：转换容器格式                               [对比时间：01s 测试大小/原大小：41.4MB/41.3MB]
+# [2]：硬编码                                    [对比时间：22s 测试大小/原大小：80.6MB/41.3MB] 
+# [3]：软编码                                    [对比时间：44s 测试大小/原大小：25.4MB/41.3MB]
+# [4]：限制码率[码率限制964K-3856K，缓冲区2000K]    [对比时间：57s 测试大小/原大小：62.7MB/41.3MB]
+# [5]：改变分辨率[默认1080P]
+# [6]：提取音频
+# [7]：裁剪视频
 FFmpeg = 1
 
 # 目标格式
@@ -77,11 +81,20 @@ skip_count = 0
 def convert_video(input_path, output_path):
     try:   
         if FFmpeg == 1:
-            command = ['ffmpeg', '-i', input_path, '-c:v', 'hevc_videotoolbox', output_path]
+            command = ['ffmpeg', '-i', input_path, '-c', 'copy', output_path]
         elif FFmpeg == 2:
-            command = ['ffmpeg', '-i', input_path, '-c:v', 'libx265', '-crf', '28', '-preset', 'ultrafast', '-c:a', 'aac', '-b:a', '128k', output_path]
+             command = ['ffmpeg', '-i', input_path, '-c:v', 'hevc_videotoolbox', output_path]
         elif FFmpeg == 3:
-             command = ['ffmpeg', '-i', input_path, '-c', 'copy', output_path]
+             command = ['ffmpeg', '-i', input_path, '-c:v', 'libx265', '-crf', '28', '-preset', 'ultrafast', '-c:a', 'aac', '-b:a', '128k', output_path]
+        elif FFmpeg == 4:
+            command = ['ffmpeg', '-i', input_path, '-minrate', '964K', '-maxrate', '3856K', '-bufsize', '2000K', output_path]
+        elif FFmpeg == 5:
+            command = ['ffmpeg', '-i', input_path, '-vf', 'scale=1080:-1', output_path]
+        elif FFmpeg == 6:
+            command = ['ffmpeg', '-i', input_path, '-vn', '-c:a', 'copy', output_path]
+        elif FFmpeg == 7:
+            command = ['ffmpeg', '-ss', '[start]','-i', input_path, '-to', '[end]', '-c', 'copy', output_path] # 00:01:50
+
 
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         duration = None
