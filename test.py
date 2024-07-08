@@ -11,7 +11,7 @@ from datetime import datetime
 ####################
 #参数设置
 
-# 编码方式
+# 编码方式 
 # 「hevc_videotoolbox」为macOS h.265 硬编码，不支持硬解码
 # 「1」：默认全自动，较快，体积x2           [hevc_videotoolbox]                     [对比时间：1M    测试大小/原大小：87MB/41.3MB] 
 # 「2」：重新解码编码[轻微压缩]，较慢，体积x3 [hevc_videotoolbox acc -crf 18]         [对比时间：1M16s 测试大小/原大小：145.7MB/41.3MB]
@@ -167,7 +167,7 @@ log_update(log_path, success_count, failure_count, skip_count, total_files, form
 # 读取并显示日志中 "## 本次运行信息" 内的内容
 with open(log_path, 'r') as log_file:
     content = log_file.readlines()
-    basic_info = content[1:6]
+    basic_info = content[1:6]  # 获取本次运行信息部分的内容
     print("\n\n" + "".join(basic_info))
 
 print("处理完成，详情请在桌面查看日志[log_小时/分钟/秒]。")
