@@ -1,7 +1,6 @@
-# pip install ffmpeg-python
 # macOS桌面创建「from」文件夹，待转换视频拖进去。
+# pip install ffmpeg-python
 # python video.py
-
 
 import os
 import shutil
@@ -10,6 +9,7 @@ import time
 from datetime import datetime
 
 ####################
+#参数设置
 
 # 编码方式
 # 「1」：直接复制音视频流重新封装，快，无损，推荐。
