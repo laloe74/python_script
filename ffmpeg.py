@@ -104,7 +104,8 @@ failure_count = 0
 skip_count = 0
 
 def convert_video(input_path, output_path):
-    try:   
+    try:
+        # 模式处理
         if FFmpeg == 1:
             command = ['ffmpeg', '-i', input_path, '-c', 'copy', output_path]
         elif FFmpeg == 2:
@@ -166,11 +167,12 @@ def process_videos():
             output_path = os.path.join(output_dir, f"[{FFmpeg}]" + os.path.splitext(file)[0] + target_ext)
             processed_files += 1
 
+            # 原扩展名和目标扩展名一样 且 模式设置为1、2、3则跳过处理
             if os.path.splitext(file)[-1] == target_ext and FFmpeg in [1, 2, 3]:
                 shutil.copy(input_path, output_path)
                 skip_count += 1
                 log_append_section(log_path, '跳过转换的视频名称', file)
-                print(f"\r跳过[{format_time(time.time() - start_time)}]: {success_count}/{failure_count}/{skip_count}/{total_files} 0% |        | -- {os.path.splitext(file)[0][:20]}..{os.path.splitext(file)[1]}", end='', flush=True)
+                print(f"\r跳过[{format_time(time.time() - start_time)}]: {success_count}/{failure_count}/{skip_count}/{total_files} 0% |        | -- {os.path.splitext(file)[0][:20]}..{os.path.splitext(file)[1]}", end='\n', flush=True)
                 continue
             
             result = convert_video(input_path, output_path)
@@ -185,9 +187,8 @@ def process_videos():
             
             progress = processed_files / total_files * 100
             bar = f"[{'█' * int(progress // 5)}{' ' * (20 - int(progress // 5))}]"
-            print(f"\r运行中[{format_time(time.time() - start_time)}]: {success_count}/{failure_count}/{skip_count}/{total_files} {int(progress)}% {bar} -- {os.path.splitext(file)[0][:20]}..{os.path.splitext(file)[1]}", end='', flush=True)
+            print(f"\r运行中[{format_time(time.time() - start_time)}]: {success_count}/{failure_count}/{skip_count}/{total_files} {int(progress)}% {bar} -- {os.path.splitext(file)[0][:20]}..{os.path.splitext(file)[1]}", end='\n', flush=True)
 
-            # 实时更新日志
             log_update(log_path, success_count, failure_count, skip_count, total_files, format_time(time.time() - start_time))
 
 process_videos()
@@ -195,7 +196,6 @@ process_videos()
 total_time = time.time() - start_time
 log_update(log_path, success_count, failure_count, skip_count, total_files, format_time(total_time))
 
-# 读取并显示日志中 "## 本次运行信息" 内的内容
 with open(log_path, 'r') as log_file:
     content = log_file.readlines()
     basic_info = content[1:6]
