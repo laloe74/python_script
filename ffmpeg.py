@@ -1,6 +1,31 @@
 # macOS桌面创建「from」文件夹，待转换视频拖进去。
 # pip install ffmpeg-python
 # python ffmpeg.py
+#
+#Encoder hevc_videotoolbox [VideoToolbox H.265 Encoder]:
+#    General capabilities: dr1 delay hardware 
+#    Threading capabilities: none
+#    Supported hardware devices: videotoolbox 
+#    Supported pixel formats: videotoolbox_vld nv12 yuv420p bgra p010le
+#hevc_videotoolbox AVOptions:
+#  -profile           <int>        E..V....... Profile (from -99 to INT_MAX) (default -99)
+#     main            1            E..V....... Main Profile
+#     main10          2            E..V....... Main10 Profile
+#  -alpha_quality     <double>     E..V....... Compression quality for the alpha channel (from 0 to 1) (default 0)
+#  -constant_bit_rate <boolean>    E..V....... Require constant bit rate (macOS 13 or newer) (default false)
+#  -allow_sw          <boolean>    E..V....... Allow software encoding (default false)
+#  -require_sw        <boolean>    E..V....... Require software encoding (default false)
+#  -realtime          <boolean>    E..V....... Hint that encoding should happen in real-time if not faster (e.g. capturing from camera). (default false)
+#  -frames_before     <boolean>    E..V....... Other frames will come before the frames in this session. This helps smooth concatenation issues. (default false)
+#  -frames_after      <boolean>    E..V....... Other frames will come after the frames in this session. This helps smooth concatenation issues. (default false)
+#  -prio_speed        <boolean>    E..V....... prioritize encoding speed (default auto)
+#  -power_efficient   <int>        E..V....... Set to 1 to enable more power-efficient encoding if supported. (from -1 to 1) (default -1)
+#  -max_ref_frames    <int>        E..V....... Sets the maximum number of reference frames. This only has an effect when the value is less than the maximum allowed by the profile/level. (from 0 to INT_MAX) (default 0)
+
+# ffmpeg -codecs | grep videotoolbox
+ #DEV.LS h264                 H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 (encoders: libx264 libx264rgb h264_videotoolbox)
+ #DEV.L. hevc                 H.265 / HEVC (High Efficiency Video Coding) (encoders: libx265 hevc_videotoolbox)
+ #DEVIL. prores               Apple ProRes (iCodec Pro) (encoders: prores prores_aw prores_ks prores_videotoolbox)
 
 import os
 import shutil
@@ -17,7 +42,7 @@ from datetime import datetime
 # [5]：改变分辨率[默认1080P]
 # [6]：提取音频
 # [7]：裁剪视频
-FFmpeg = 2
+FFmpeg = 1
 
 # 目标格式
 target_ext = ".mp4"
@@ -141,7 +166,7 @@ def process_videos():
             output_path = os.path.join(output_dir, f"[{FFmpeg}]" + os.path.splitext(file)[0] + target_ext)
             processed_files += 1
 
-            if os.path.splitext(file)[-1] == target_ext:
+            if os.path.splitext(file)[-1] == target_ext and FFmpeg in [1, 2, 3]:
                 shutil.copy(input_path, output_path)
                 skip_count += 1
                 log_append_section(log_path, '跳过转换的视频名称', file)
