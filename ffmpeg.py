@@ -2,12 +2,12 @@
 # pip install ffmpeg-python
 # python ffmpeg.py
 #
-#Encoder hevc_videotoolbox [VideoToolbox H.265 Encoder]:
-#    General capabilities: dr1 delay hardware 
+# Encoder hevc_videotoolbox [VideoToolbox H.265 Encoder]:
+#    General capabilities: dr1 delay hardware
 #    Threading capabilities: none
-#    Supported hardware devices: videotoolbox 
+#    Supported hardware devices: videotoolbox
 #    Supported pixel formats: videotoolbox_vld nv12 yuv420p bgra p010le
-#hevc_videotoolbox AVOptions:
+# hevc_videotoolbox AVOptions:
 #  -profile           <int>        E..V....... Profile (from -99 to INT_MAX) (default -99)
 #     main            1            E..V....... Main Profile
 #     main10          2            E..V....... Main10 Profile
@@ -23,9 +23,9 @@
 #  -max_ref_frames    <int>        E..V....... Sets the maximum number of reference frames. This only has an effect when the value is less than the maximum allowed by the profile/level. (from 0 to INT_MAX) (default 0)
 
 # ffmpeg -codecs | grep videotoolbox
- #DEV.LS h264                 H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 (encoders: libx264 libx264rgb h264_videotoolbox)
- #DEV.L. hevc                 H.265 / HEVC (High Efficiency Video Coding) (encoders: libx265 hevc_videotoolbox)
- #DEVIL. prores               Apple ProRes (iCodec Pro) (encoders: prores prores_aw prores_ks prores_videotoolbox)
+# DEV.LS h264                 H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10 (encoders: libx264 libx264rgb h264_videotoolbox)
+# DEV.L. hevc                 H.265 / HEVC (High Efficiency Video Coding) (encoders: libx265 hevc_videotoolbox)
+# DEVIL. prores               Apple ProRes (iCodec Pro) (encoders: prores prores_aw prores_ks prores_videotoolbox)
 
 import os
 import shutil
@@ -119,7 +119,7 @@ def convert_video(input_path, output_path):
         elif FFmpeg == 6:
             command = ['ffmpeg', '-i', input_path, '-vn', '-c:a', 'copy', output_path]
         elif FFmpeg == 7:
-            command = ['ffmpeg', '-ss', '[start]','-i', input_path, '-to', '[end]', '-c', 'copy', output_path] # 00:01:50
+            command = ['ffmpeg', '-ss', '[start]','-i', input_path, '-to', '[end]', '-c', 'copy', output_path]  # 00:01:50
 
 
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
