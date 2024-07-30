@@ -10,3 +10,6 @@
 
 ### testock.py
 在Telegram频道每天定时发送指定股票涨跌信息
+
+### ddos.py
+简单DDOS脚本
