@@ -2,6 +2,8 @@
 pip install pycryptodome
 然后把你的密码词典命名为passwords.txt，每行一个密码
 python3 jiandan.py开始跑吧
+
+字典：https://infocon.org/word%20lists/
 '''
 
 
